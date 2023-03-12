@@ -1,20 +1,25 @@
-const express = require("express");
-const router = express.Router();
-const userController = require("../../controllers/UserController");
+// Require the express router module
+const router = require("express").Router();
 
-// GET all users
-router.get("/", userController.getAllUsers);
+// Import the required functions from the users-controller module
+const {
+  getAllUsers,
+  getUsersById,
+  createUsers,
+  updateUsers,
+  deleteUsers,
+  addFriend,
+  deleteFriend,
+} = require("../../controllers/users-controller");
 
-// GET a specific user
-router.get("/:id", userController.getUser);
+// Set up routes for GET and POST requests to "/api/users"
+router.route("/").get(getAllUsers).post(createUsers);
 
-// POST a new user
-router.post("/", userController.createUser);
+// Set up routes for GET, PUT, and DELETE requests to "/api/users/:id"
+router.route("/:id").get(getUsersById).put(updateUsers).delete(deleteUsers);
 
-// PUT/update an existing user
-router.put("/:id", userController.updateUser);
+// Set up routes for POST and DELETE requests to "/api/users/:id/friends/:friendId"
+router.route("/:id/friends/:friendId").post(addFriend).delete(deleteFriend);
 
-// DELETE a user
-router.delete("/:id", userController.deleteUser);
-
+// Export the router module
 module.exports = router;
