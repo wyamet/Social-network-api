@@ -1,16 +1,40 @@
 const { Thought, User } = require("../models");
 
 const thoughtController = {
-  // create new thought
-  createThought: async (req, res) => {
+  // Creates new thought
+  createThought({ params, body }, res) {
+    Thought.create(body)
+      .then(({ _id }) => {
+        return User.findOneAndUpdate(
+          { _id: params.userId },
+          { $push: { thoughts: _id } },
+          { new: true }
+        );
+      })
+      .then((dbThoughtsData) => {
+        if (!dbThoughtsData) {
+          res.status(404).json({ message: "No thoughts with this ID" });
+          return;
+        }
+        res.json(dbThoughtsData);
+      })
+      .catch((err) => res.json(err));
+  },
+
+  // get thought by id
+  getThoughtById: async (req, res) => {
     try {
-      const newThought = await Thought.create(req.body);
-      const updatedUser = await User.findOneAndUpdate(
-        { _id: req.params.userId },
-        { $push: { thoughts: newThought._id } },
-        { new: true }
-      );
-      res.json(updatedUser);
+      const thought = await Thought.findOne({ _id: req.params.id })
+        .populate({
+          path: "reactions",
+          select: "-__v",
+        })
+        .select("-__v");
+      if (!thought) {
+        res.status(404).json({ message: "No thought found with this id!" });
+        return;
+      }
+      res.json(thought);
     } catch (err) {
       res.status(400).json(err);
     }
@@ -139,3 +163,4 @@ const thoughtController = {
     }
   },
 };
+module.exports = thoughtController;

@@ -73,6 +73,47 @@ const deleteUser = async (req, res) => {
     res.status(500).json({ message: "Server Error" });
   }
 };
+// Controller function for adding a friend to a user
+const addFriend = async (req, res) => {
+  try {
+    const { id, friendId } = req.params;
+    const user = await User.findOneAndUpdate(
+      { _id: id },
+      { $push: { friends: friendId } },
+      { new: true }
+    )
+      .populate({ path: "friends", select: "-__v" })
+      .select("-__v");
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.status(200).json(user);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
+// Controller function for deleting a friend from a user
+const deleteFriend = async (req, res) => {
+  try {
+    const { id, friendId } = req.params;
+    const user = await User.findOneAndUpdate(
+      { _id: id },
+      { $pull: { friends: friendId } },
+      { new: true }
+    )
+      .populate({ path: "friends", select: "-__v" })
+      .select("-__v");
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.status(200).json(user);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
 
 module.exports = {
   createUser,
@@ -80,4 +121,6 @@ module.exports = {
   getUser,
   updateUser,
   deleteUser,
+  deleteFriend,
+  addFriend,
 };
