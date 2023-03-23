@@ -1,30 +1,31 @@
-const { Thought, User } = require("../models");
+const { Thoughts, Users } = require("../models");
 
 const thoughtController = {
   // Creates new thought
-  createThought({ params, body }, res) {
-    Thought.create(body)
-      .then(({ _id }) => {
-        return User.findOneAndUpdate(
-          { _id: params.userId },
-          { $push: { thoughts: _id } },
-          { new: true }
-        );
-      })
-      .then((dbThoughtsData) => {
-        if (!dbThoughtsData) {
-          res.status(404).json({ message: "No thoughts with this ID" });
-          return;
-        }
-        res.json(dbThoughtsData);
-      })
-      .catch((err) => res.json(err));
+  createThought: async ({ params, body }, res) => {
+    try {
+      const thought = await Thoughts.create(body);
+
+      if (!thought)
+        return res.status(500).json({ error: "Could not create Thought" });
+
+      Users.findOneAndUpdate(
+        { _id: params.userId },
+        { $push: { thoughts: thought._id } },
+        { new: true }
+      );
+
+      return res.status(200).json(thought);
+    } catch (error) {
+      console.error(error.message);
+      res.status(500).json({ error: "Could not create Thought" });
+    }
   },
 
   // get thought by id
   getThoughtById: async (req, res) => {
     try {
-      const thought = await Thought.findOne({ _id: req.params.id })
+      const thought = await Thoughts.findOne({ _id: req.params.id })
         .populate({
           path: "reactions",
           select: "-__v",
@@ -43,7 +44,7 @@ const thoughtController = {
   // get all thoughts
   getAllThoughts: async (req, res) => {
     try {
-      const thoughts = await Thought.find()
+      const thoughts = await Thoughts.find()
         .populate({
           path: "reactions",
           select: "-__v",
@@ -58,7 +59,7 @@ const thoughtController = {
   // get thought by id
   getThoughtById: async (req, res) => {
     try {
-      const thought = await Thought.findOne({ _id: req.params.id })
+      const thought = await Thoughts.findOne({ _id: req.params.id })
         .populate({
           path: "reactions",
           select: "-__v",
@@ -77,7 +78,7 @@ const thoughtController = {
   // update thought by id
   updateThought: async (req, res) => {
     try {
-      const updatedThought = await Thought.findOneAndUpdate(
+      const updatedThought = await Thoughts.findOneAndUpdate(
         { _id: req.params.id },
         req.body,
         { new: true, runValidators: true }
@@ -100,14 +101,14 @@ const thoughtController = {
   // delete thought by id
   deleteThought: async (req, res) => {
     try {
-      const deletedThought = await Thought.findOneAndDelete({
+      const deletedThought = await Thoughts.findOneAndDelete({
         _id: req.params.id,
       });
       if (!deletedThought) {
         res.status(404).json({ message: "No thought found with this id!" });
         return;
       }
-      const updatedUser = await User.findOneAndUpdate(
+      const updatedUser = await Users.findOneAndUpdate(
         { _id: deletedThought.userId },
         { $pull: { thoughts: deletedThought._id } },
         { new: true }
@@ -120,7 +121,7 @@ const thoughtController = {
   createReaction: async (req, res) => {
     try {
       const newReaction = { ...req.body, reactionId: new Date().getTime() };
-      const updatedThought = await Thought.findOneAndUpdate(
+      const updatedThought = await Thoughts.findOneAndUpdate(
         { _id: req.params.thoughtId },
         { $push: { reactions: newReaction } },
         { new: true, runValidators: true }
@@ -142,7 +143,7 @@ const thoughtController = {
   },
   deleteReaction: async (req, res) => {
     try {
-      const updatedThought = await Thought.findOneAndUpdate(
+      const updatedThought = await Thoughts.findOneAndUpdate(
         { _id: req.params.thoughtId },
         { $pull: { reactions: { reactionId: req.params.reactionId } } },
         { new: true }

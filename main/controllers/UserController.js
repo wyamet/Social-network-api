@@ -3,8 +3,8 @@ const User = require("../models/Users");
 // Controller function for creating a new user
 const createUser = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
-    const user = new User({ name, email, password });
+    const { username, email, password } = req.body;
+    const user = new User({ username, email, password });
     await user.save();
     res.status(201).json(user);
   } catch (error) {
@@ -43,10 +43,10 @@ const getUser = async (req, res) => {
 const updateUser = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, email, password } = req.body;
+    const { username, email, password } = req.body;
     const user = await User.findByIdAndUpdate(
       id,
-      { name, email, password },
+      { username, email, password },
       { new: true }
     );
     if (!user) {
