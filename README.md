@@ -23,6 +23,7 @@ This is a social network API where users can share their thoughts, react to frie
 
 ## Installation
 
+Fork the repository or clone it to your local repository.
 To install necessary dependencies, run the following command:
 
 ```
